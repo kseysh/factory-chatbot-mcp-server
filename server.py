@@ -4,9 +4,22 @@ import json
 import pyodbc
 import os
 import datetime
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# 로깅 설정
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('mcp_server.log'),  # 파일에 기록
+        logging.StreamHandler()  # 콘솔에도 출력
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # MSSQL 연결 설정
 MSSQL_CONFIG = {
@@ -69,9 +82,15 @@ mcp = FastMCP("MCP Energy Server")
 
 @mcp.tool
 def get_current_time():
-    """현재 날짜와 시간을 반환합니다.""" # 클라이언트에서 도구의 설명으로 표시된다.
-    print("use get current time Tool")
-    return datetime.datetime.now()
+    """현재 날짜와 시간을 반환합니다."""
+    try:
+        logger.info("get_current_time Tool called")
+        result = datetime.datetime.now()
+        logger.info(f"get_current_time result: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"get_current_time error: {str(e)}", exc_info=True)
+        raise
 
 @mcp.tool
 def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, building: str) -> str:
@@ -83,7 +102,7 @@ def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, bu
     - building: 건물 이름 (건물 이름에는 공백이 존재하지 않습니다.)
     """
     try:
-        print(f"get energy usages by date range Tool Use, param: {start_date_time}, {end_date_time}, {building}")
+        logger.info(f"get_energy_usages_by_date_range Tool called - start: {start_date_time}, end: {end_date_time}, building: {building}")
 
         query = """
         SELECT
@@ -97,8 +116,7 @@ def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, bu
         """
 
         results = execute_read_query(query, [building, start_date_time, end_date_time])
-
-        print(f"get energy usages by date range Tool Use, results: {results}")
+        logger.info(f"get_energy_usages_by_date_range - results count: {len(results)}")
 
         response = {
             "meta": {
@@ -108,6 +126,7 @@ def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, bu
         }
         return json.dumps(response, ensure_ascii=False, indent=2)
     except Exception as e:
+        logger.error(f"get_energy_usages_by_date_range error: {str(e)}", exc_info=True)
         return json.dumps({"error": f"쿼리 실행 실패: {str(e)}"}, ensure_ascii=False)
 
 @mcp.tool
@@ -119,7 +138,7 @@ def get_energy_usage(measurement_date_time: str, building: str) -> str:
     - building: 건물 이름 (건물 이름에는 공백이 존재하지 않습니다.)
     """
     try:
-        print(f"get energy usage Tool Use, param: {measurement_date_time}, {building}")
+        logger.info(f"get_energy_usage Tool called - datetime: {measurement_date_time}, building: {building}")
 
         query = """
         SELECT TOP 1
@@ -132,12 +151,16 @@ def get_energy_usage(measurement_date_time: str, building: str) -> str:
         """
 
         results = execute_read_query(query, [measurement_date_time, building])
-        print(f"get energy usage Tool Use, results: {results}")
+        logger.info(f"get_energy_usage - results found: {len(results) > 0}")
+
         if results:
+            logger.info(f"get_energy_usage - returning data for {building}")
             return json.dumps(results[0], ensure_ascii=False, indent=2)
         else:
+            logger.warning(f"get_energy_usage - no data found for {building} at {measurement_date_time}")
             return json.dumps({"error": "데이터를 찾을 수 없습니다."}, ensure_ascii=False)
     except Exception as e:
+        logger.error(f"get_energy_usage error: {str(e)}", exc_info=True)
         return json.dumps({"error": f"쿼리 실행 실패: {str(e)}"}, ensure_ascii=False)
 
 
