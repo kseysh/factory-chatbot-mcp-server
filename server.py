@@ -65,12 +65,12 @@ def get_current_time():
 
 @mcp.tool
 def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, building: str) -> str:
-    """날짜 범위와 건물 ID를 사용하여 에너지 사용량 목록을 조회합니다.
+    """날짜 범위와 건물 이름을 사용하여 에너지 사용량 목록을 조회합니다.
 
     Parameters:
     - start_date_time: ISO-8601 형식의 시작 시간 (예: 2024-01-01T00:00:00)
     - end_date_time: ISO-8601 형식의 종료 시간 (예: 2024-01-31T23:59:59)
-    - building_id: 건물 ID
+    - building: 건물 이름 (건물 이름에는 공백이 존재하지 않습니다.)
     """
     try:
         print(f"get energy usages by date range Tool Use, param: {start_date_time}, {end_date_time}, {building}")
@@ -102,11 +102,11 @@ def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, bu
 
 @mcp.tool
 def get_energy_usage(measurement_date_time: str, building: str) -> str:
-    """측정 시간과 건물 ID를 사용하여 단일 에너지 사용량을 조회합니다.
+    """측정 시간과 건물 이름을 사용하여 단일 에너지 사용량을 조회합니다.
 
     Parameters:
     - measurement_date_time: ISO-8601 형식의 측정 시간 (예: 2024-01-01T12:00:00)
-    - building_id: 건물 ID
+    - building: 건물 이름 (건물 이름에는 공백이 존재하지 않습니다.)
     """
     try:
         print(f"get energy usage Tool Use, param: {measurement_date_time}, {building}")
