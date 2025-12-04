@@ -57,13 +57,13 @@ def execute_read_query(query: str, params: list = None) -> list:
 
 mcp = FastMCP("MCP Energy Server")
 
-@mcp.tool(name="get current time")
+@mcp.tool
 def get_current_time():
     """현재 날짜와 시간을 반환합니다.""" # 클라이언트에서 도구의 설명으로 표시된다.
     print("use get current time Tool")
     return datetime.datetime.now()
 
-@mcp.tool(name="get energy usages by date range")
+@mcp.tool
 def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, building: str) -> str:
     """날짜 범위와 건물 ID를 사용하여 에너지 사용량 목록을 조회합니다.
 
@@ -100,7 +100,7 @@ def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, bu
     except Exception as e:
         return json.dumps({"error": f"쿼리 실행 실패: {str(e)}"}, ensure_ascii=False)
 
-@mcp.tool(name="get energy usage")
+@mcp.tool
 def get_energy_usage(measurement_date_time: str, building: str) -> str:
     """측정 시간과 건물 ID를 사용하여 단일 에너지 사용량을 조회합니다.
 
