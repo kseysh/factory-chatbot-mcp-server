@@ -46,7 +46,17 @@ def execute_read_query(query: str, params: list = None) -> list:
         # 결과를 딕셔너리 리스트로 변환
         columns = [description[0] for description in cursor.description]
         rows = cursor.fetchall()
-        results = [dict(zip(columns, row)) for row in rows]
+        results = []
+
+        for row in rows:
+            row_dict = {}
+            for col, val in zip(columns, row):
+                # datetime 객체를 ISO 8601 문자열로 변환
+                if isinstance(val, datetime.datetime):
+                    row_dict[col] = val.isoformat()
+                else:
+                    row_dict[col] = val
+            results.append(row_dict)
 
         cursor.close()
         conn.close()
@@ -86,7 +96,7 @@ def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, bu
         ORDER BY DateTime DESC
         """
 
-        results = execute_read_query(query, [start_date_time, end_date_time, building])
+        results = execute_read_query(query, [building, start_date_time, end_date_time])
 
         print(f"get energy usages by date range Tool Use, results: {results}")
 
@@ -139,7 +149,4 @@ if __name__ == "__main__": # 파일이 직접 실행될 때만 실행됩니다. 
         path="/mcp", # 클라이언트 요청을 수신할 HTTP 경로를 지정합니다. /는 루트 경로를 의미합니다.
         log_level="debug",
     ) # MCP 서버를 시작합니다.
-    
-# app = FastAPI()
-# sessions = {} # 세션 저장소
 
