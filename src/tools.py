@@ -34,7 +34,9 @@ def get_energy_usages_by_date_range(start_date_time: str, end_date_time: str, bu
     """
     try:
         logger.info(f"Range query called: {building}, {start_date_time} ~ {end_date_time}")
-        return service_get_energy_usages_range(start_date_time, end_date_time, building)
+        result = service_get_energy_usages_range(start_date_time, end_date_time, building)
+        logger.info(f"get_energy_usages_by_date_range result: {result}")
+        return result
     except Exception as e:
         logger.error(f"Range query error: {str(e)}", exc_info=True)
         return str(e)
@@ -44,7 +46,8 @@ def get_energy_usage(measurement_date_time: str, building: str) -> str:
     """측정 시간과 건물 이름을 사용하여 단일 에너지 사용량을 조회합니다."""
     try:
         logger.info(f"Single query called: {building} at {measurement_date_time}")
-        return service_get_energy_usage_single(measurement_date_time, building)
+        result = service_get_energy_usage_single(measurement_date_time, building)
+        return result
     except Exception as e:
         logger.error(f"Single query error: {str(e)}", exc_info=True)
         return str(e)
