@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # MSSQL 연결 설정
 MSSQL_CONFIG = {
-    'driver': os.getenv('MSSQL_DRIVER', '{ODBC Driver 17 for SQL Server}'),
+    'driver': os.getenv('MSSQL_DRIVER', '{ODBC Driver 18 for SQL Server}'),
     'server': os.getenv('MSSQL_SERVER', 'localhost'),
     'database': os.getenv('MSSQL_DATABASE', 'master'),
     'uid': os.getenv('MSSQL_UID', 'sa'),
@@ -38,6 +38,7 @@ def get_mssql_connection():
         f"DATABASE={MSSQL_CONFIG['database']};"
         f"UID={MSSQL_CONFIG['uid']};"
         f"PWD={MSSQL_CONFIG['pwd']};"
+        "TrustServerCertificate=yes;"
     )
     return pyodbc.connect(connection_string)
 
