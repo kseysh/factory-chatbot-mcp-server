@@ -3,7 +3,8 @@ from .config import get_logger
 from .services import (
     service_get_current_time,
     service_get_energy_usages_range,
-    service_get_energy_usage_single
+    service_get_energy_usage_single,
+    service_forecast_energy_usage
 )
 
 logger = get_logger(__name__)
@@ -50,4 +51,26 @@ def get_energy_usage(measurement_date_time: str, building: str) -> str:
         return result
     except Exception as e:
         logger.error(f"Single query error: {str(e)}", exc_info=True)
+        return str(e)
+
+@mcp.tool
+def forecast_energy_usage(start_date_time: str, end_date_time: str, building: str, horizon: int = 24) -> str:
+    """과거 에너지 사용량 데이터를 사용하여 미래 전력량을 예측합니다.
+
+    Parameters:
+    - start_date_time: 과거 데이터 시작 시간 (SQL Server 형식: YYYY-MM-DD HH:MM:SS)
+    - end_date_time: 과거 데이터 종료 시간 (SQL Server 형식: YYYY-MM-DD HH:MM:SS)
+    - building: 건물 이름
+    - horizon: 예측할 시간 개수 (기본값: 24시간)
+
+    Returns:
+    - JSON 형식의 예측 결과 (point_forecast와 quantile_forecast 포함)
+    """
+    try:
+        logger.info(f"Forecast called: {building}, {start_date_time} ~ {end_date_time}, horizon={horizon}")
+        result = service_forecast_energy_usage(start_date_time, end_date_time, building, horizon)
+        logger.info(f"forecast_energy_usage result: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"Forecast error: {str(e)}", exc_info=True)
         return str(e)
