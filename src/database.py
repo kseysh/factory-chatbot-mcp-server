@@ -26,7 +26,20 @@ engine = create_engine(
 )
 
 def execute_read_query(query: str, params: list = None) -> list:
-    """SELECT 쿼리를 실행하고 결과를 딕셔너리 리스트로 반환"""
+    """
+    SELECT 쿼리를 실행하고 결과를 딕셔너리 리스트로 반환
+
+    Parameters:
+    - query: SELECT 쿼리 문자열 (? 파라미터 사용)
+    - params: 쿼리 파라미터 리스트. 날짜/시간은 SQL Server 형식 (YYYY-MM-DD HH:MM:SS) 사용
+
+    Returns:
+    - list: 쿼리 결과를 딕셔너리 리스트로 반환 (SQL Server에서 제공한 형식 그대로)
+
+    Raises:
+    - ValueError: SELECT 쿼리가 아닌 경우
+    - Exception: 데이터베이스 연결 또는 쿼리 실행 오류
+    """
     if not query.strip().upper().startswith('SELECT'):
         raise ValueError("오직 SELECT 쿼리만 실행 가능합니다.")
 
@@ -49,11 +62,7 @@ def execute_read_query(query: str, params: list = None) -> list:
                 for row in rows:
                     row_dict = {}
                     for col, val in zip(columns, row):
-                        # datetime 직렬화 처리
-                        if isinstance(val, datetime.datetime):
-                            row_dict[col] = val.isoformat()
-                        else:
-                            row_dict[col] = val
+                        row_dict[col] = val
                     results.append(row_dict)
                 return results
             return []
