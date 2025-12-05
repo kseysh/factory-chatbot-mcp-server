@@ -7,7 +7,7 @@ logger = get_logger(__name__)
 
 # 연결 문자열 생성
 params = quote_plus(
-    f"DRIVER={{{MSSQL_CONFIG['driver']}}};"
+    f"DRIVER={MSSQL_CONFIG['driver']};"
     f"SERVER={MSSQL_CONFIG['server']};"
     f"DATABASE={MSSQL_CONFIG['database']};"
     f"UID={MSSQL_CONFIG['uid']};"
