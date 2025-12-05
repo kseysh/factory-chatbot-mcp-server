@@ -10,7 +10,7 @@ load_dotenv()
 def setup_logging():
     """표준 출력으로만 로그 출력"""
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     # 기존 핸들러 제거
     for handler in logger.handlers[:]:
@@ -24,7 +24,7 @@ def setup_logging():
 
     # 표준 출력 핸들러
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setLevel(logging.INFO)
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 
