@@ -7,7 +7,6 @@ from .forecast_model import forecasting, model
 
 logger = get_logger(__name__)
 
-
 class DateTimeEncoder(json.JSONEncoder):
     """datetime 객체를 JSON 직렬화 가능하게 변환하는 커스텀 인코더"""
     def default(self, obj):
@@ -15,15 +14,49 @@ class DateTimeEncoder(json.JSONEncoder):
             return obj.isoformat()
         return super().default(obj)
 
-def service_get_current_time():
-    """현재 시간 로직"""
+def service_get_current_time() -> str:
+    """현재 로컬 시간 반환"""
     return datetime.datetime.now()
+
+def service_get_monitored_buildings() -> str:
+    """10분마다 누적 유효전력량(KWH)이 수집되는 건물들의 목록을 반환"""
+    query = """
+    SELECT DISTINCT Building
+    FROM Tech_All_KWH
+    ORDER BY Building;
+    """
+    results = execute_read_query(query)
+
+    if results:
+        return json.dumps(results, ensure_ascii=False, indent=2)
+    else:
+        return json.dumps({"error": "데이터를 찾을 수 없습니다."}, ensure_ascii=False)
+
+def service_get_building_data_range(building: str) -> str:
+    """Tech_All_KWH 뷰에서 지정된 건물의 DataTime 최소(시작)/최대(종료) 값을 조회"""
+
+    query = """
+    SELECT 
+        MIN(DataTime) as start_datetime, 
+        MAX(DataTime) as end_datetime
+    FROM Tech_All_KWH
+    WHERE Building = ? AND DataValue != 0
+    """
+    
+    results = execute_read_query(query, [building])
+
+    if results and results[0].get('start_datetime'):
+        data = results[0]
+        data['building'] = building
+        return json.dumps(data, ensure_ascii=False, indent=2, default=str)
+    else:
+        return json.dumps({"error": f"'{building}'에 대한 데이터를 찾을 수 없습니다."}, ensure_ascii=False)
 
 def service_get_energy_usages_range(start_date_time: str, end_date_time: str, building: str) -> str:
     """
-    기간별 에너지 사용량 조회 로직
+    기간별 에너지 사용량 반환
 
-    Parameters:
+    Args:
     - start_date_time: 시작 시간 (SQL Server 형식: YYYY-MM-DD HH:MM:SS)
     - end_date_time: 종료 시간 (SQL Server 형식: YYYY-MM-DD HH:MM:SS)
     - building: 건물명
@@ -43,48 +76,71 @@ def service_get_energy_usages_range(start_date_time: str, end_date_time: str, bu
     """
     results = execute_read_query(query, [building, start_date_time, end_date_time])
     
-    response = {
-        "meta": {"building": building},
-        "energyUsageInfos": results
-    }
-    return json.dumps(response, ensure_ascii=False, indent=2, cls=DateTimeEncoder)
+    if results:
+        response = {
+            "meta": {
+                "building": building
+            },
+            "energyUsageInfos": results
+        }
+        return json.dumps(response, ensure_ascii=False, indent=2, cls=DateTimeEncoder)
+    else:
+        return json.dumps({"error": "해당 기간의 에너지 사용량 데이터를 조회할 수 없습니다."}, ensure_ascii=False)
 
-def service_get_energy_usage_single(measurement_date_time: str, building: str) -> str:
+
+def service_get_total_energy_usage(start_date_time: str, end_date_time: str, building: str) -> str:
     """
-    단건 에너지 사용량 조회 로직
+    특정 기간(start_date_time ~ end_date_time) 동안의 총 전력 사용량(kWh)을
+    누적값(DataValue)의 차이로 계산하여 반환합니다.
 
-    Parameters:
-    - measurement_date_time: 측정 시간 (SQL Server 형식: YYYY-MM-DD HH:MM:SS)
-    - building: 건물명
+    Args:
+    - start_date_time: 시작 시간 (SQL Server 형식: YYYY-MM-DD HH:MM:SS)
+    - end_date_time:   종료 시간 (SQL Server 형식: YYYY-MM-DD HH:MM:SS)
+    - building:        건물명
 
     Returns:
     - JSON 형식의 조회 결과
     """
+    
     query = """
-    SELECT TOP 1
-        Building,
-        DataValue,
-        TimeStamp,
-        DateTime
-    FROM dbo.Tech_All_KWH
-    WHERE DateTime = ? AND Building = ?
+    SELECT 
+        MIN(DataValue) as start_accumulated_val, 
+        MAX(DataValue) as end_accumulated_val
+    FROM Tech_All_KWH
+    WHERE Building = ? 
+      AND DataTime >= ? 
+      AND DataTime <= ?
     """
-    results = execute_read_query(query, [measurement_date_time, building])
+    
+    results = execute_read_query(query, [building, start_date_time, end_date_time])
 
-    if results:
-        return json.dumps(results[0], ensure_ascii=False, indent=2, cls=DateTimeEncoder)
+    if results and results[0].get('start_accumulated_val') is not None:
+        row = results[0]
+        
+        val_at_start = row['start_accumulated_val']
+        val_at_end = row['end_accumulated_val']
+        
+        calculated_usage = abs(val_at_end - val_at_start)
+        
+        response = {
+            "meta": {
+                "building": building
+            },
+            "total_usage_kwh": calculated_usage
+        }
+        return json.dumps(response, ensure_ascii=False, indent=2)
     else:
-        return json.dumps({"error": "데이터를 찾을 수 없습니다."}, ensure_ascii=False)
+        return json.dumps({"error": "해당 기간에 데이터를 찾을 수 없습니다."}, ensure_ascii=False)
 
 def service_forecast_energy_usage(start_date_time: str, end_date_time: str, building: str, horizon: int = 24) -> str:
     """
     TimesFM 모델을 사용하여 전력량 예측
 
-    Parameters:
+    Args:
     - start_date_time: 과거 데이터 시작 시간 (SQL Server 형식: YYYY-MM-DD HH:MM:SS)
     - end_date_time: 과거 데이터 종료 시간 (SQL Server 형식: YYYY-MM-DD HH:MM:SS)
     - building: 건물명
-    - horizon: 예측할 시간 단위 (기본값: 24시간)
+    - horizon: 예측할 타임스텝 수 (단위: 10분)
 
     Returns:
     - JSON 형식의 예측 결과
@@ -132,8 +188,7 @@ def service_forecast_energy_usage(start_date_time: str, end_date_time: str, buil
                 "data_points": len(energy_values)
             },
             "forecast": {
-                "point_forecast": forecast_values,  # 평균 예측값
-                "quantile_forecast": quantile_values  # 분위수 예측값 (mean + 9개 분위수)
+                "point_forecast": forecast_values,  # 예측값
             }
         }
 
