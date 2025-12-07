@@ -1,5 +1,8 @@
 from src.config import setup_logging
 from fastmcp import FastMCP
+from .src.electricity_tools import register_electricity_tools
+from .src.forecast_tools import register_forecast_tools
+from .src.datetime_tools import register_datetime_tools
 
 # MCP 서버 인스턴스 생성
 mcp_server = FastMCP(
