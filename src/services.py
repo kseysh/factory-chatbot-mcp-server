@@ -33,12 +33,12 @@ def service_get_monitored_buildings() -> str:
         return json.dumps({"error": "데이터를 찾을 수 없습니다."}, ensure_ascii=False)
 
 def service_get_building_data_range(building: str) -> str:
-    """Tech_All_KWH 뷰에서 지정된 건물의 DataTime 최소(시작)/최대(종료) 값을 조회"""
+    """Tech_All_KWH 뷰에서 지정된 건물의 DateTime 최소(시작)/최대(종료) 값을 조회"""
 
     query = """
     SELECT 
-        MIN(DataTime) as start_datetime, 
-        MAX(DataTime) as end_datetime
+        MIN(DateTime) as start_datetime, 
+        MAX(DateTime) as end_datetime
     FROM Tech_All_KWH
     WHERE Building = ? AND DataValue != 0
     """
@@ -108,8 +108,8 @@ def service_get_total_energy_usage(start_date_time: str, end_date_time: str, bui
         MAX(DataValue) as end_accumulated_val
     FROM Tech_All_KWH
     WHERE Building = ? 
-      AND DataTime >= ? 
-      AND DataTime <= ?
+      AND DateTime >= ? 
+      AND DateTime <= ?
     """
     
     results = execute_read_query(query, [building, start_date_time, end_date_time])
