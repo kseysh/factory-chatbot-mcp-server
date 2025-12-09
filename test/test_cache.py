@@ -12,7 +12,6 @@ from src.services import (
     cache
 )
 
-
 class TestTTLCache:
     """TTLCache (@cached) 데코레이터 테스트"""
 
@@ -302,20 +301,3 @@ class TestCacheIntegration:
             print(f"⚠️  오류: {e}")
             print("⚠️  이 테스트는 실제 DB 연결과 모델이 필요합니다.")
             pytest.skip("DB 연결 또는 모델 로드 불가")
-
-
-def main():
-    """pytest 없이 직접 실행 시"""
-    print("\n" + "=" * 60)
-    print("캐싱 데코레이터 테스트")
-    print("=" * 60)
-    print("\n이 테스트는 pytest로 실행하는 것을 권장합니다:")
-    print("  pytest test_cache.py -v")
-    print("\n또는 특정 테스트만 실행:")
-    print("  pytest test_cache.py::TestTTLCache -v")
-    print("  pytest test_cache.py::TestLRUCache -v")
-    print("  pytest test_cache.py::TestCacheIntegration -v")
-
-
-if __name__ == "__main__":
-    main()

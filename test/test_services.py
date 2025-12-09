@@ -598,22 +598,3 @@ class TestResponseStructure:
                 print(f"✓ {service_name}: 유효한 JSON")
             except json.JSONDecodeError as e:
                 pytest.fail(f"{service_name}: JSON 파싱 실패 - {e}")
-
-
-def main():
-    """pytest 없이 직접 실행 시"""
-    print("\n" + "=" * 60)
-    print("Service 함수 종합 테스트")
-    print("=" * 60)
-    print("\n이 테스트는 pytest로 실행하는 것을 권장합니다:")
-    print("  pytest test/test_services.py -v")
-    print("\n또는 특정 클래스만 실행:")
-    print("  pytest test/test_services.py::TestServiceGetMonitoredBuildings -v")
-    print("  pytest test/test_services.py::TestServiceGetBuildingDataRange -v")
-    print("  pytest test/test_services.py::TestServiceGetTotalEnergyUsage -v")
-    print("\n실제 DB 연결 테스트만 실행:")
-    print("  pytest test/test_services.py -v -k 'real_database'")
-
-
-if __name__ == "__main__":
-    main()
