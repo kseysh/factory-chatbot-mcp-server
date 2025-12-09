@@ -4,7 +4,11 @@ import numpy as np
 from .database import execute_read_query
 from .config import get_logger
 from .forecast_model import forecasting, model
+from functools import lru_cache, cache
+from cachetools import TTLCache
 
+
+cache = TTLCache(maxsize=100, ttl= 60*60)
 logger = get_logger(__name__)
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -18,6 +22,7 @@ def service_get_current_time() -> str:
     """현재 로컬 시간 반환"""
     return datetime.datetime.now()
 
+@cache(cache)
 def service_get_monitored_buildings() -> str:
     """10분마다 누적 유효전력량(KWH)이 수집되는 건물들의 목록을 반환"""
     query = """
@@ -132,6 +137,7 @@ def service_get_total_energy_usage(start_date_time: str, end_date_time: str, bui
     else:
         return json.dumps({"error": "해당 기간에 데이터를 찾을 수 없습니다."}, ensure_ascii=False)
 
+@lru_cache(maxsize = 128)
 def service_forecast_energy_usage(start_date_time: str, end_date_time: str, building: str, horizon: int = 24) -> str:
     """
     TimesFM 모델을 사용하여 전력량 예측
@@ -179,7 +185,7 @@ def service_forecast_energy_usage(start_date_time: str, end_date_time: str, buil
         forecast_values = point_forecast[0].tolist()  # (1, horizon) -> list
 
         # 분위수 예측 (mean, q10, q20, ..., q90)
-        quantile_values = quantile_forecast[0].tolist()  # (1, horizon, 10) -> list
+        # quantile_values = quantile_forecast[0].tolist()  # (1, horizon, 10) -> list
 
         response = {
             "meta": {
