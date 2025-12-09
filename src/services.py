@@ -4,11 +4,11 @@ import numpy as np
 from .database import execute_read_query
 from .config import get_logger
 from .forecast_model import forecasting, model
-from functools import lru_cache, cache
-from cachetools import TTLCache
+from functools import lru_cache
+from cachetools import cached, TTLCache
 
 
-cache = TTLCache(maxsize=100, ttl= 60*60)
+cache = TTLCache(maxsize=1, ttl= 60*60)
 logger = get_logger(__name__)
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -22,7 +22,7 @@ def service_get_current_time() -> str:
     """현재 로컬 시간 반환"""
     return datetime.datetime.now()
 
-@cache(cache)
+@cached(cache)
 def service_get_monitored_buildings() -> str:
     """10분마다 누적 유효전력량(KWH)이 수집되는 건물들의 목록을 반환"""
     query = """
