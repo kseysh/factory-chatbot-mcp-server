@@ -69,7 +69,7 @@ def register_electricity_tools(mcp_server):
             return str(e)
 
     @mcp_server.tool(
-        name="get_energy_usages",
+        name="get_total_energy_usage",
         description="특정 건물의 지정된 기간(YYYY-MM-DD HH:MM:SS) 동안의 총 전력 사용량(kWh)을 계산하여 반환합니다."
     )
     def get_total_energy_usage(start_date_time: str, end_date_time: str, building: str) -> str:
