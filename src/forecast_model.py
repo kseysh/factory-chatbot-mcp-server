@@ -1,7 +1,10 @@
 from .models.timesfm.src.timesfm.configs import ForecastConfig
 from .models.timesfm.src.timesfm.timesfm_2p5.timesfm_2p5_torch import TimesFM_2p5_200M_torch
+import torch
 
 model = TimesFM_2p5_200M_torch.from_pretrained("google/timesfm-2.5-200m-pytorch", torch_compile=False)
+
+model.model.to(dtype=torch.float32)
 
 model.compile(
     ForecastConfig(
