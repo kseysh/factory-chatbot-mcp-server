@@ -35,11 +35,11 @@ def get_logger(name: str):
 # 모듈 임포트 시 로깅 자동 초기화
 setup_logging()
 
-# MSSQL 설정
-MSSQL_CONFIG = {
-    'driver': os.getenv('MSSQL_DRIVER', '{ODBC Driver 18 for SQL Server}'),
-    'server': os.getenv('MSSQL_SERVER', 'localhost'),
-    'database': os.getenv('MSSQL_DATABASE', 'master'),
-    'uid': os.getenv('MSSQL_UID', 'sa'),
-    'pwd': os.getenv('MSSQL_PWD', ''),
+# PostgreSQL 설정
+POSTGRES_CONFIG = {
+    'host': os.getenv('POSTGRES_HOST', 'localhost'),
+    'port': os.getenv('POSTGRES_PORT', '5432'),
+    'database': os.getenv('POSTGRES_DATABASE', 'postgres'),
+    'user': os.getenv('POSTGRES_USER', 'postgres'),
+    'password': os.getenv('POSTGRES_PASSWORD', ''),
 }

@@ -67,9 +67,9 @@ class TestServiceGetMonitoredBuildings:
 
         # Mock 데이터 설정
         mock_query.return_value = [
-            {"Building": "하이테크센터"},
-            {"Building": "테크노파크"},
-            {"Building": "60주년기념관"}
+            {"building": "하이테크센터"},
+            {"building": "테크노파크"},
+            {"building": "60주년기념관"}
         ]
 
         result = service_get_monitored_buildings()
@@ -78,10 +78,10 @@ class TestServiceGetMonitoredBuildings:
         result_dict = json.loads(result)
         assert isinstance(result_dict, list), "결과는 리스트여야 합니다"
         assert len(result_dict) == 3, "건물 개수가 일치하지 않습니다"
-        assert result_dict[0]["Building"] == "하이테크센터"
+        assert result_dict[0]["building"] == "하이테크센터"
 
         print(f"✓ 건물 개수: {len(result_dict)}")
-        print(f"✓ 건물 목록: {[b['Building'] for b in result_dict]}")
+        print(f"✓ 건물 목록: {[b['building'] for b in result_dict]}")
 
     @patch('src.services.execute_read_query')
     def test_returns_error_when_no_data(self, mock_query):
@@ -210,16 +210,16 @@ class TestServiceGetEnergyUsagesRange:
         # Mock 데이터 설정
         mock_query.return_value = [
             {
-                "Building": "하이테크센터",
-                "DataValue": 1234.5,
-                "TimeStamp": "2024-09-01 00:00:00",
-                "DateTime": datetime(2024, 9, 1, 0, 0, 0)
+                "building": "하이테크센터",
+                "datavalue": 1234.5,
+                "timestamp": "2024-09-01 00:00:00",
+                "datetime": datetime(2024, 9, 1, 0, 0, 0)
             },
             {
-                "Building": "하이테크센터",
-                "DataValue": 1235.2,
-                "TimeStamp": "2024-09-01 00:10:00",
-                "DateTime": datetime(2024, 9, 1, 0, 10, 0)
+                "building": "하이테크센터",
+                "datavalue": 1235.2,
+                "timestamp": "2024-09-01 00:10:00",
+                "datetime": datetime(2024, 9, 1, 0, 10, 0)
             }
         ]
 
@@ -408,7 +408,7 @@ class TestServiceForecastEnergyUsage:
 
         # Mock 데이터 설정
         mock_query.return_value = [
-            {"DataValue": 100.0 + i} for i in range(144)  # 24시간 (10분 단위)
+            {"powerusage": 100.0 + i} for i in range(144)  # 24시간 (10분 단위)
         ]
 
         import numpy as np
@@ -464,7 +464,7 @@ class TestServiceForecastEnergyUsage:
 
         # Mock 데이터 설정
         mock_query.return_value = [
-            {"DataValue": 100.0 + i} for i in range(144)
+            {"powerusage": 100.0 + i} for i in range(144)
         ]
 
         import numpy as np
@@ -496,7 +496,7 @@ class TestServiceForecastEnergyUsage:
 
         # Mock 데이터 설정
         mock_query.return_value = [
-            {"DataValue": 100.0 + i} for i in range(144)
+            {"powerusage": 100.0 + i} for i in range(144)
         ]
 
         import numpy as np
@@ -580,7 +580,7 @@ class TestResponseStructure:
         print("=" * 60)
 
         # Mock 데이터 설정
-        mock_query.return_value = [{"Building": "테스트"}]
+        mock_query.return_value = [{"building": "테스트"}]
 
         services = [
             ("get_monitored_buildings", service_get_monitored_buildings, []),
