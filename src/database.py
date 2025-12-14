@@ -1,5 +1,4 @@
 from sqlalchemy import create_engine, text
-import datetime
 from .config import POSTGRES_CONFIG, get_logger
 
 logger = get_logger(__name__)
