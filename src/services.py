@@ -74,7 +74,6 @@ def service_get_energy_usages_range(start_date_time: str, end_date_time: str, bu
     SELECT
         building,
         powerusage,
-        timestamp,
         datetime
     FROM electricity
     WHERE building = :building AND datetime >= :start_date_time AND datetime <= :end_date_time

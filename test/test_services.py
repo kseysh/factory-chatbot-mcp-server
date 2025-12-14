@@ -212,13 +212,11 @@ class TestServiceGetEnergyUsagesRange:
             {
                 "building": "하이테크센터",
                 "datavalue": 1234.5,
-                "timestamp": "2024-09-01 00:00:00",
                 "datetime": datetime(2024, 9, 1, 0, 0, 0)
             },
             {
                 "building": "하이테크센터",
                 "datavalue": 1235.2,
-                "timestamp": "2024-09-01 00:10:00",
                 "datetime": datetime(2024, 9, 1, 0, 10, 0)
             }
         ]
