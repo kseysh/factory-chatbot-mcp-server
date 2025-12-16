@@ -56,13 +56,13 @@ async def service_get_building_data_range(building: str) -> str:
     else:
         return json.dumps({"error": f"'{building}'에 대한 데이터를 찾을 수 없습니다."}, ensure_ascii=False)
 
-async def service_get_energy_usages_range(start_date_time: str, end_date_time: str, building: str) -> str:
+async def service_get_energy_usages_range(start_date_time: datetime.datetime, end_date_time: datetime.datetime, building: str) -> str:
     """
     기간별 에너지 사용량 반환
 
     Args:
-    - start_date_time: 시작 시간 (PostgreSQL 형식: YYYY-MM-DD HH:MM:SS)
-    - end_date_time: 종료 시간 (PostgreSQL 형식: YYYY-MM-DD HH:MM:SS)
+    - start_date_time: 시작 시간 (datetime 객체)
+    - end_date_time: 종료 시간 (datetime 객체)
     - building: 건물명
 
     Returns:
@@ -95,14 +95,14 @@ async def service_get_energy_usages_range(start_date_time: str, end_date_time: s
         return json.dumps({"error": "해당 기간의 에너지 사용량 데이터를 조회할 수 없습니다."}, ensure_ascii=False)
 
 
-async def service_get_total_energy_usage(start_date_time: str, end_date_time: str, building: str) -> str:
+async def service_get_total_energy_usage(start_date_time: datetime.datetime, end_date_time: datetime.datetime, building: str) -> str:
     """
     특정 기간(start_date_time ~ end_date_time) 동안의 총 전력 사용량(kWh)을
     누적값(datavalue)의 차이로 계산하여 반환합니다.
 
     Args:
-    - start_date_time: 시작 시간 (PostgreSQL 형식: YYYY-MM-DD HH:MM:SS)
-    - end_date_time:   종료 시간 (PostgreSQL 형식: YYYY-MM-DD HH:MM:SS)
+    - start_date_time: 시작 시간 (datetime 객체)
+    - end_date_time:   종료 시간 (datetime 객체)
     - building:        건물명
 
     Returns:
@@ -144,13 +144,13 @@ async def service_get_total_energy_usage(start_date_time: str, end_date_time: st
         return json.dumps({"error": "해당 기간에 데이터를 찾을 수 없습니다."}, ensure_ascii=False)
 
 @cached(ttl=3600)
-async def service_forecast_energy_usage(start_date_time: str, end_date_time: str, building: str, horizon: int = 24) -> str:
+async def service_forecast_energy_usage(start_date_time: datetime.datetime, end_date_time: datetime.datetime, building: str, horizon: int = 24) -> str:
     """
     TimesFM 모델을 사용하여 전력량 예측
 
     Args:
-    - start_date_time: 과거 데이터 시작 시간 (PostgreSQL 형식: YYYY-MM-DD HH:MM:SS)
-    - end_date_time: 과거 데이터 종료 시간 (PostgreSQL 형식: YYYY-MM-DD HH:MM:SS)
+    - start_date_time: 과거 데이터 시작 시간 (datetime 객체)
+    - end_date_time: 과거 데이터 종료 시간 (datetime 객체)
     - building: 건물명
     - horizon: 예측할 타임스텝 수 (단위: 10분)
 

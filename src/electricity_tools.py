@@ -5,6 +5,8 @@ from .services import (
     service_get_energy_usages_range,
     service_get_total_energy_usage,
 )
+from datetime import datetime
+import json
 
 logger = get_logger(__name__)
 
@@ -61,9 +63,17 @@ def register_electricity_tools(mcp_server):
         """
         try:
             logger.info(f"Range query called: {building}, {start_date_time} ~ {end_date_time}")
-            result = await service_get_energy_usages_range(start_date_time, end_date_time, building)
+
+            # 문자열을 datetime 객체로 변환
+            start_dt = datetime.strptime(start_date_time, '%Y-%m-%d %H:%M:%S')
+            end_dt = datetime.strptime(end_date_time, '%Y-%m-%d %H:%M:%S')
+
+            result = await service_get_energy_usages_range(start_dt, end_dt, building)
             logger.info(f"get_energy_usages_by_date_range result: {result}")
             return result
+        except ValueError as e:
+            logger.error(f"Date parsing error: {str(e)}", exc_info=True)
+            return json.dumps({"error": f"날짜 형식 오류: {str(e)}. 올바른 형식: YYYY-MM-DD HH:MM:SS"}, ensure_ascii=False)
         except Exception as e:
             logger.error(f"Range query error: {str(e)}", exc_info=True)
             return str(e)
@@ -83,9 +93,17 @@ def register_electricity_tools(mcp_server):
         """
         try:
             logger.info(f"get_total_energy_usage called: {building}, {start_date_time} ~ {end_date_time}")
-            result = await service_get_total_energy_usage(start_date_time, end_date_time, building)
+
+            # 문자열을 datetime 객체로 변환
+            start_dt = datetime.strptime(start_date_time, '%Y-%m-%d %H:%M:%S')
+            end_dt = datetime.strptime(end_date_time, '%Y-%m-%d %H:%M:%S')
+
+            result = await service_get_total_energy_usage(start_dt, end_dt, building)
             logger.info(f"get_total_energy_usage result: {result}")
             return result
+        except ValueError as e:
+            logger.error(f"Date parsing error: {str(e)}", exc_info=True)
+            return json.dumps({"error": f"날짜 형식 오류: {str(e)}. 올바른 형식: YYYY-MM-DD HH:MM:SS"}, ensure_ascii=False)
         except Exception as e:
             logger.error(f"get_total_energy_usage error: {str(e)}", exc_info=True)
             return str(e)

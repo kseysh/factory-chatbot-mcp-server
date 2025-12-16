@@ -1,5 +1,7 @@
 from .config import get_logger
 from .services import service_forecast_energy_usage
+from datetime import datetime
+import json
 
 logger = get_logger(__name__)
 
@@ -39,9 +41,17 @@ def register_forecast_tools(mcp_server):
         """
         try:
             logger.info(f"Forecast called: {building}, {start_date_time} ~ {end_date_time}, horizon={horizon}")
-            result = await service_forecast_energy_usage(start_date_time, end_date_time, building, horizon)
+
+            # 문자열을 datetime 객체로 변환
+            start_dt = datetime.strptime(start_date_time, '%Y-%m-%d %H:%M:%S')
+            end_dt = datetime.strptime(end_date_time, '%Y-%m-%d %H:%M:%S')
+
+            result = await service_forecast_energy_usage(start_dt, end_dt, building, horizon)
             logger.info(f"forecast_energy_usage result: {result}")
             return result
+        except ValueError as e:
+            logger.error(f"Date parsing error: {str(e)}", exc_info=True)
+            return json.dumps({"error": f"날짜 형식 오류: {str(e)}. 올바른 형식: YYYY-MM-DD HH:MM:SS"}, ensure_ascii=False)
         except Exception as e:
             logger.error(f"Forecast error: {str(e)}", exc_info=True)
             return str(e)
