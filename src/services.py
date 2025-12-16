@@ -5,11 +5,9 @@ import asyncio
 from .database import execute_read_query
 from .config import get_logger
 from .forecast_model import forecasting, model
-from functools import lru_cache
-from cachetools import cached, TTLCache
+from aiocache import cached
 
 
-cache = TTLCache(maxsize=1, ttl= 60*60)
 logger = get_logger(__name__)
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -23,22 +21,22 @@ def service_get_current_time() -> str:
     """현재 로컬 시간 반환"""
     return datetime.datetime.now()
 
-@cached(cache)
-def service_get_monitored_buildings() -> str:
+@cached(ttl=3600)
+async def service_get_monitored_buildings() -> str:
     """10분마다 누적 유효전력량(KWH)이 수집되는 건물들의 목록을 반환"""
     query = """
     SELECT DISTINCT building
     FROM electricity
     ORDER BY building;
     """
-    results = execute_read_query(query)
+    results = await execute_read_query(query)
 
     if results:
         return json.dumps(results, ensure_ascii=False, indent=2)
     else:
         return json.dumps({"error": "데이터를 찾을 수 없습니다."}, ensure_ascii=False)
 
-def service_get_building_data_range(building: str) -> str:
+async def service_get_building_data_range(building: str) -> str:
     """electricity 테이블에서 지정된 건물의 datetime 최소(시작)/최대(종료) 값을 조회"""
 
     query = """
@@ -49,7 +47,7 @@ def service_get_building_data_range(building: str) -> str:
     WHERE building = :building AND datavalue != 0
     """
 
-    results = execute_read_query(query, {"building": building})
+    results = await execute_read_query(query, {"building": building})
 
     if results and results[0].get('start_datetime'):
         data = results[0]
@@ -58,7 +56,7 @@ def service_get_building_data_range(building: str) -> str:
     else:
         return json.dumps({"error": f"'{building}'에 대한 데이터를 찾을 수 없습니다."}, ensure_ascii=False)
 
-def service_get_energy_usages_range(start_date_time: str, end_date_time: str, building: str) -> str:
+async def service_get_energy_usages_range(start_date_time: str, end_date_time: str, building: str) -> str:
     """
     기간별 에너지 사용량 반환
 
@@ -79,12 +77,12 @@ def service_get_energy_usages_range(start_date_time: str, end_date_time: str, bu
     WHERE building = :building AND datetime >= :start_date_time AND datetime <= :end_date_time
     ORDER BY datetime DESC
     """
-    results = execute_read_query(query, {
+    results = await execute_read_query(query, {
         "building": building,
         "start_date_time": start_date_time,
         "end_date_time": end_date_time
     })
-    
+
     if results:
         response = {
             "meta": {
@@ -97,7 +95,7 @@ def service_get_energy_usages_range(start_date_time: str, end_date_time: str, bu
         return json.dumps({"error": "해당 기간의 에너지 사용량 데이터를 조회할 수 없습니다."}, ensure_ascii=False)
 
 
-def service_get_total_energy_usage(start_date_time: str, end_date_time: str, building: str) -> str:
+async def service_get_total_energy_usage(start_date_time: str, end_date_time: str, building: str) -> str:
     """
     특정 기간(start_date_time ~ end_date_time) 동안의 총 전력 사용량(kWh)을
     누적값(datavalue)의 차이로 계산하여 반환합니다.
@@ -121,7 +119,7 @@ def service_get_total_energy_usage(start_date_time: str, end_date_time: str, bui
       AND datetime <= :end_date_time
     """
 
-    results = execute_read_query(query, {
+    results = await execute_read_query(query, {
         "building": building,
         "start_date_time": start_date_time,
         "end_date_time": end_date_time
@@ -129,12 +127,12 @@ def service_get_total_energy_usage(start_date_time: str, end_date_time: str, bui
 
     if results and results[0].get('start_accumulated_val') is not None:
         row = results[0]
-        
+
         val_at_start = row['start_accumulated_val']
         val_at_end = row['end_accumulated_val']
-        
+
         calculated_usage = abs(val_at_end - val_at_start)
-        
+
         response = {
             "meta": {
                 "building": building
@@ -145,8 +143,8 @@ def service_get_total_energy_usage(start_date_time: str, end_date_time: str, bui
     else:
         return json.dumps({"error": "해당 기간에 데이터를 찾을 수 없습니다."}, ensure_ascii=False)
 
-@lru_cache(maxsize = 128)
-def service_forecast_energy_usage(start_date_time: str, end_date_time: str, building: str, horizon: int = 24) -> str:
+@cached(ttl=3600)
+async def service_forecast_energy_usage(start_date_time: str, end_date_time: str, building: str, horizon: int = 24) -> str:
     """
     TimesFM 모델을 사용하여 전력량 예측
 
@@ -171,7 +169,7 @@ def service_forecast_energy_usage(start_date_time: str, end_date_time: str, buil
         ORDER BY datetime ASC
         """
 
-        results = execute_read_query(query, {
+        results = await execute_read_query(query, {
             "building": building,
             "start_date_time": start_date_time,
             "end_date_time": end_date_time
@@ -188,8 +186,10 @@ def service_forecast_energy_usage(start_date_time: str, end_date_time: str, buil
         # 3. numpy 배열로 변환
         input_data = np.array(energy_values)
 
-        # 4. TimesFM 모델로 예측
-        point_forecast, quantile_forecast = forecasting(model, horizon, input_data)
+        # 4. TimesFM 모델로 예측 (CPU-intensive 작업을 thread로 실행)
+        point_forecast, quantile_forecast = await asyncio.to_thread(
+            forecasting, model, horizon, input_data
+        )
 
         logger.info(f"forecast_energy_usage - 예측 완료: {horizon}시간")
 

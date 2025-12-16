@@ -10,7 +10,7 @@ def register_forecast_tools(mcp_server):
         name="forecast_energy_usage",
         description="과거 누적 유효전력량(KWH) 데이터를 활용해 미래 전력량을 예측합니다."
     )
-    def forecast_energy_usage(start_date_time: str, end_date_time: str, building: str, horizon: int = 144) -> str:
+    async def forecast_energy_usage(start_date_time: str, end_date_time: str, building: str, horizon: int = 144) -> str:
         """
         과거 누적 유효전력량(KWH) 데이터를 활용해 미래 전력량을 예측합니다.
 
@@ -39,7 +39,7 @@ def register_forecast_tools(mcp_server):
         """
         try:
             logger.info(f"Forecast called: {building}, {start_date_time} ~ {end_date_time}, horizon={horizon}")
-            result = service_forecast_energy_usage(start_date_time, end_date_time, building, horizon)
+            result = await service_forecast_energy_usage(start_date_time, end_date_time, building, horizon)
             logger.info(f"forecast_energy_usage result: {result}")
             return result
         except Exception as e:

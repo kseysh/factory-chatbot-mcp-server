@@ -10,7 +10,7 @@ def register_datetime_tools(mcp_server):
         name="get_current_time",
         description="현재 로컬 시스템의 날짜와 시간 정보를 조회합니다."
     )
-    async def get_current_time() -> str:
+    def get_current_time() -> str:
         """현재 로컬 시스템의 날짜와 시간 정보를 반환"""
         try:
             logger.info("get_current_time Tool called")
