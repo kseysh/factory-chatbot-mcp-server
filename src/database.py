@@ -13,8 +13,8 @@ db_url = (
 # 비동기 엔진 생성 (싱글톤처럼 모듈 레벨에서 유지)
 engine = create_async_engine(
     db_url,
-    pool_size=10,
-    max_overflow=10,
+    pool_size=30,
+    max_overflow=30,
     pool_timeout=30,
     pool_recycle=1800,
     echo=False
