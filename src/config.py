@@ -32,6 +32,10 @@ def get_logger(name: str):
     """로거 인스턴스 반환"""
     return logging.getLogger(name)
 
+def get_env(key: str, default: str = None) -> str:
+    """환경 변수 값 반환"""
+    return os.getenv(key, default)
+
 # 모듈 임포트 시 로깅 자동 초기화
 setup_logging()
 

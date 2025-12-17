@@ -2,8 +2,9 @@ import datetime
 import json
 import numpy as np
 import asyncio
+import aiohttp
 from .database import execute_read_query
-from .config import get_logger
+from .config import get_logger, get_env
 from .forecast_model import forecasting, model
 from aiocache import cached
 
@@ -216,3 +217,76 @@ async def service_forecast_energy_usage(start_date_time: datetime.datetime, end_
     except Exception as e:
         logger.error(f"forecast_energy_usage error: {str(e)}", exc_info=True)
         return json.dumps({"error": f"전력량 예측 실패: {str(e)}"}, ensure_ascii=False)
+
+async def service_control_power(action: str) -> str:
+    """
+    전력 제어 시스템에 명령을 전송
+
+    Args:
+    - action: 제어 명령 ('on' 또는 'off')
+
+    Returns:
+    - JSON 형식의 제어 결과
+    """
+    try:
+        logger.info(f"service_control_power 시작 - action: {action}")
+
+        # .env에서 POWER_CONTROL_URL 가져오기
+        power_control_url = get_env('POWER_CONTROL_URL')
+
+        if not power_control_url:
+            logger.error("POWER_CONTROL_URL이 .env에 설정되지 않았습니다.")
+            return json.dumps({
+                "action": action,
+                "success": False,
+                "message": "POWER_CONTROL_URL이 설정되지 않았습니다."
+            }, ensure_ascii=False)
+
+        # 전력 제어 API에 요청 전송
+        payload = {
+            "action": action
+        }
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(
+                    power_control_url,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as response:
+                    status_code = response.status
+                    response_text = await response.text()
+
+                    logger.info(f"service_control_power - API 응답: status={status_code}, body={response_text}")
+
+                    if status_code == 200:
+                        action_kr = "중단" if action == "off" else "재개"
+                        return json.dumps({
+                            "action": action,
+                            "success": True,
+                            "message": f"전력 사용을 {action_kr}했습니다.",
+                            "api_response": response_text
+                        }, ensure_ascii=False, indent=2)
+                    else:
+                        return json.dumps({
+                            "action": action,
+                            "success": False,
+                            "message": f"전력 제어 API 요청 실패 (HTTP {status_code})",
+                            "api_response": response_text
+                        }, ensure_ascii=False, indent=2)
+
+            except aiohttp.ClientConnectorError as e:
+                logger.error(f"service_control_power - 연결 실패: {str(e)}", exc_info=True)
+                return json.dumps({
+                    "action": action,
+                    "success": False,
+                    "message": f"전력 제어 시스템에 연결할 수 없습니다: {str(e)}"
+                }, ensure_ascii=False, indent=2)
+
+    except Exception as e:
+        logger.error(f"service_control_power error: {str(e)}", exc_info=True)
+        return json.dumps({
+            "action": action,
+            "success": False,
+            "message": f"전력 제어 실패: {str(e)}"
+        }, ensure_ascii=False, indent=2)

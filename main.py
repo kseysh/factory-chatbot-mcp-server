@@ -3,6 +3,7 @@ from fastmcp import FastMCP
 from src.electricity_tools import register_electricity_tools
 from src.forecast_tools import register_forecast_tools
 from src.datetime_tools import register_datetime_tools
+from src.power_control_tools import register_power_control_tools
 
 # MCP 서버 인스턴스 생성
 mcp_server = FastMCP(
@@ -17,6 +18,7 @@ def register_all_tools():
     register_electricity_tools(mcp_server)
     register_forecast_tools(mcp_server)
     register_datetime_tools(mcp_server)
+    register_power_control_tools(mcp_server)
 
 # 서버 실행
 if __name__ == "__main__":
