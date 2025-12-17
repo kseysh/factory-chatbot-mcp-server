@@ -9,7 +9,7 @@ def register_power_control_tools(mcp_server):
 
     @mcp_server.tool(
         name="control_power",
-        description="전력 제어 시스템에 명령을 전송합니다. 전력 사용을 중단하거나 재개할 수 있습니다."
+        description="전력 제어 시스템에 실시간 명령을 전송합니다. 이 도구는 매번 실제로 호출해야 하며, 이전 응답을 재사용하지 마세요. 전력 사용을 중단(off)하거나 재개(on)할 수 있습니다."
     )
     async def control_power(action: str) -> str:
         """
